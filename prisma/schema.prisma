@@ -1,0 +1,111 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "mysql"
+    url      = env("DATABASE_URL")
+}
+
+model foodreviews {
+    UserId Int
+    ItemId Int
+    Rating Int?
+    Review String? @db.Text
+    users  users   @relation(fields: [UserId], references: [Id], onUpdate: Restrict, map: "FoodReviews_ibfk_1")
+    items  items   @relation(fields: [ItemId], references: [Id], onUpdate: Restrict, map: "FoodReviews_ibfk_2")
+
+    @@id([UserId, ItemId])
+    @@index([ItemId], map: "ItemId")
+}
+
+model items {
+    Id           Int           @id @default(autoincrement())
+    name         String?       @db.VarChar(100)
+    RestaurantId String?       @db.VarChar(100)
+    UnitPrice    Float?        @db.Float
+    Picture      String?       @db.VarChar(500)
+    AvgRating    Float?        @db.Float
+    NbRating     Int?
+    NbReview     Int?
+    ingredients  String?       @db.Text
+    foodreviews  foodreviews[]
+    restaurants  restaurants?  @relation(fields: [RestaurantId], references: [Name], onDelete: Restrict, onUpdate: Restrict, map: "Items_ibfk_1")
+    orderitems   orderitems[]
+
+    @@index([RestaurantId], map: "RestaurantId")
+}
+
+model orderitems {
+    Id       Int     @id @default(autoincrement())
+    ItemId   Int?
+    OrderId  Int?
+    Quantity Int?
+    Note     String? @db.Text
+    items    items?  @relation(fields: [ItemId], references: [Id], onDelete: Restrict, onUpdate: Restrict, map: "OrderItems_ibfk_1")
+    orders   orders? @relation(fields: [OrderId], references: [Id], onDelete: Restrict, onUpdate: Restrict, map: "OrderItems_ibfk_2")
+
+    @@index([ItemId], map: "ItemId")
+    @@index([OrderId], map: "OrderId")
+}
+
+model orders {
+    Id               Int          @id @default(autoincrement())
+    DeliveryAdress   String       @db.VarChar(255)
+    DeliveryNotes    String?      @db.Text
+    State            String?      @default("Pending") @db.VarChar(30)
+    XCord            Float?       @db.Float
+    YCord            Float?       @db.Float
+    OrderTime        DateTime?    @db.Time(0)
+    DeliveryManPhone String?      @db.VarChar(10)
+    TotalFees        Float?       @db.Float
+    UserId           Int?
+    orderitems       orderitems[]
+    users            users?       @relation(fields: [UserId], references: [Id], onDelete: Restrict, onUpdate: Restrict, map: "FK_ForeignKeyName")
+
+    @@index([UserId], map: "FK_ForeignKeyName")
+}
+
+model restaurantreviews {
+    Id           Int         @id @default(autoincrement())
+    RestaurantId String      @db.VarChar(100)
+    UserId       Int
+    Review       String?     @db.Text
+    Rating       Int?
+    restaurants  restaurants @relation(fields: [RestaurantId], references: [Name], onUpdate: Restrict, map: "RestaurantReviews_ibfk_1")
+    users        users       @relation(fields: [UserId], references: [Id], onUpdate: Restrict, map: "RestaurantReviews_ibfk_2")
+}
+
+model restaurants {
+    Name              String              @id @db.VarChar(100)
+    Adress            String              @db.VarChar(255)
+    Logo              String              @db.Text
+    Facebook          String?             @db.VarChar(500)
+    XCord             Float?              @db.Float
+    YCord             Float?              @db.Float
+    Type              String              @db.VarChar(255)
+    AvgRating         Float?              @db.Float
+    NbReview          Int?
+    Phone             String              @db.VarChar(10)
+    Email             String?             @db.VarChar(255)
+    NbRating          Int?
+    TransportFee      Float?              @db.Float
+    items             items[]
+    restaurantreviews restaurantreviews[]
+}
+
+model users {
+    Id                Int                 @id @default(autoincrement())
+    Name              String              @unique(map: "Name") @db.VarChar(20)
+    Email             String              @db.VarChar(255)
+    Password          String              @db.VarChar(255)
+    Picture           String?             @db.VarChar(500)
+    FacebookId        String?             @db.VarChar(500)
+    InstagramId       String?             @db.VarChar(500)
+    Phone             String?             @db.VarChar(255)
+    XCord             Float?              @db.Float
+    YCord             Float?              @db.Float
+    foodreviews       foodreviews[]
+    orders            orders[]
+    restaurantreviews restaurantreviews[]
+}
